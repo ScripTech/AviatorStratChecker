@@ -79,7 +79,7 @@ To set up and use AviatorStratChecker, follow these simple steps:
 
     def on_lose(self):
         super().on_lose()
-        
+
         self.bet = self.base_bet
    ```
 
@@ -96,7 +96,7 @@ To set up and use AviatorStratChecker, follow these simple steps:
 1. **Edit the file autobet.py to add your strategy:**
    ```python
    from strats.custom_strats import BestStrat
-   
+
    def main():
     strat = BestStrat(
         description="BestStrat - Example",
@@ -125,3 +125,6 @@ To set up and use AviatorStratChecker, follow these simple steps:
 We welcome contributions! If you encounter any issues or have suggestions, please open an issue or submit a pull request.
 
 
+
+
+chromedriver --port=4446

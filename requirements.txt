@@ -1,3 +1,5 @@
 helium
 rich
 matplotlib
+webdriver-manager
+selenium

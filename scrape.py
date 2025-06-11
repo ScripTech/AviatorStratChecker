@@ -24,12 +24,12 @@ def signal_handler(sig, frame):
 stop = False
 
 def main():
-    
+
     while stop is False:
         try:
             aviator = Aviator(debug=True)
             aviator.login()
-            aviator.go_to_game()
+            # aviator.go_to_game()
 
 
             while aviator.in_game() and stop is False:

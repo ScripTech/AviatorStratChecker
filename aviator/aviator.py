@@ -1,10 +1,10 @@
 from browser.browser import Browser
-import helium 
+import helium
 import aviator.vars as vars
 import creds as creds
 from selenium.webdriver.common.by import By
 import time
-from datetime import datetime 
+from datetime import datetime
 
 from strats.strats import Strat
 
@@ -28,28 +28,28 @@ class Aviator(Browser):
         super().__init__(headless= headless, test=test, remote_driver=remote_driver,
                 remote_address=remote_address,remote_port=remote_port,
                   use_cookies=use_cookies, profile_path=vars.profile_path)
-        
+
         self.debug = debug
         self.strat = strat
-        
+
         if self.strat is not None:
             self.strat.reset()
 
         helium.set_driver(self.driver)
-        
+
 
 
     def login(self):
-        helium.go_to("https://22bet-b.com")
+        helium.go_to("https://elephantbet.co.mz")
+        print("Is User logged in:", self.logged_in())
         if not self.logged_in():
-            helium.click("LOG IN")
-            helium.write(creds.username, into="ID or Email")
-            helium.write(creds.password, into="Password")
-            helium.click("Remember")
-            helium.click("LOG IN")
+            logger.debug("User not logged in, attempting to log in")
+            helium.write(creds.username, into="Telefone")
+            helium.write(creds.password, into="Senha")
+            helium.click("Conecte-se")
             input("press enter to continue")
-        
-        
+
+
 
     def logged_in(self):
         if self.debug:
@@ -57,13 +57,14 @@ class Aviator(Browser):
         element = helium.S("#user-money")
         if element.exists():
             if self.debug:
+                print("logged in")
                 logger.debug("logged in")
             return True
         else:
             if self.debug:
                 logger.debug("not logged in")
             return False
-        
+
 
     def in_game(self):
         '''
@@ -80,8 +81,8 @@ class Aviator(Browser):
 
         if self.debug:
             logger.debug("not in game")
-        return False            
-    
+        return False
+
     def get_last_game_result(self):
         '''
         get last game result
@@ -90,7 +91,7 @@ class Aviator(Browser):
         #     logger.debug("getting last game result")
 
         element = self.find_elements(By.XPATH, vars.last_game_result, timeout=1)
-        
+
         if element is not None:
             return element.text.strip().replace("x", "")
 
@@ -118,13 +119,13 @@ class Aviator(Browser):
         if self.strat.bet == 0 or self.strat.multiplier == 0:
             if self.debug:
                 logger.debug("bet or multiplier is 0, not placing bet")
-            return False        
+            return False
 
         if self.place_bet(self.strat.bet, self.strat.multiplier) is False:
             if self.debug:
                 logger.debug("could not place bet")
             return False
-        
+
         self.strat.gamble()
 
 
@@ -153,11 +154,11 @@ class Aviator(Browser):
             #refresh the page
             self.driver.refresh()
             pass
-        
 
 
 
-            
+
+
         if len(results) > 0:
             # if self.debug:
             #     logger.debug("got game results")
@@ -222,10 +223,10 @@ class Aviator(Browser):
             time.sleep(0.1)
         if self.debug:
             logger.debug("\ngame finished")
-    
+
     def add_to_log(self, result):
         '''
-        add result to results.txt in this 
+        add result to results.txt in this
         format timestamp (format dd-mm-yyyy hh:mm:ss),result
         '''
         if self.debug:
@@ -249,7 +250,7 @@ class Aviator(Browser):
             if self.debug:
                 logger.debug("could not click auto cashout button")
             return False
-        
+
 
     def place_bet(self,amount, multiplier):
         '''
@@ -268,19 +269,19 @@ class Aviator(Browser):
             if self.debug:
                 logger.debug("could not set multiplier")
             return False
-        
+
         if self.click_button(vars.place_bet_button) is False:
             if self.debug:
                 logger.debug("could not click place bet button")
             return False
-        
+
         return True
 
 
     def go_to_game(self):
         wait = WebDriverWait(self.driver, 10)
 
-        helium.go_to("https://22bet-b.com/slots")
+        helium.go_to("https://elephantbet.co.mz/aviator")
         helium.write("AVIATOR", into="SEARCH")
         #sleep for 2 seconds to let the search results load
         time.sleep(2)
@@ -312,7 +313,7 @@ class Aviator(Browser):
 
         #maximize window
         self.driver.maximize_window()
-    
+
         #wait for the game to open in a new window
         time.sleep(2)
 

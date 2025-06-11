@@ -1,4 +1,8 @@
 import sys
+import os
+import uuid
+import subprocess
+import time
 
 
 from selenium import webdriver
@@ -8,7 +12,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 
-import os 
 
 
 class Browser:
@@ -21,10 +24,12 @@ class Browser:
         self.profile_path = profile_path
         self.default_timeout = default_timeout
 
+        # Kill any existing Chrome processes
+        self._kill_chrome_processes()
 
-        #Chrome options 
+        #Chrome options
         if sys.platform == "win32":
-            prefs = {"profile.default_content_settings.popups": 0,    
+            prefs = {"profile.default_content_settings.popups": 0,
             "download.prompt_for_download": False,
             "download.directory_upgrade": False}
             self.chrome_options.add_experimental_option("prefs",prefs)
@@ -37,36 +42,43 @@ class Browser:
         self.chrome_options.add_argument('--allow-running-insecure-content')
         self.chrome_options.add_argument('--no-sandbox')
         self.chrome_options.add_argument("--start-maximized")
-        self.chrome_options.add_argument('--disable-dev-shm-usage')        
+        self.chrome_options.add_argument('--disable-dev-shm-usage')
         self.chrome_options.add_experimental_option('excludeSwitches',
                                                      ['enable-logging'])
-        
-        # Adding argument to disable the AutomationControlled flag 
-        self.chrome_options.add_argument("--disable-blink-features=AutomationControlled") 
-        
-        # Exclude the collection of enable-automation switches 
-        self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"]) 
-        
-        # Turn-off userAutomationExtension 
-        self.chrome_options.add_experimental_option("useAutomationExtension", False) 
-        
-        # Setting the driver path and requesting a page 
-        
-        
+
+        # Adding argument to disable the AutomationControlled flag
+        self.chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+
+        # Exclude the collection of enable-automation switches
+        self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+
+        # Turn-off userAutomationExtension
+        self.chrome_options.add_experimental_option("useAutomationExtension", False)
+
+        # Setting the driver path and requesting a page
+
+
         if self.profile_path != "":
-            print("profile path",self.profile_path)
+            # Add unique identifier to profile path
+            unique_id = str(uuid.uuid4())[:8]
+            self.profile_path = os.path.join(self.profile_path, f"profile_{unique_id}")
+            print("profile path", self.profile_path)
             os.makedirs(self.profile_path, exist_ok=True)
             self.chrome_options.add_argument(f"--user-data-dir={self.profile_path}")
-            # self.chrome_options.add_argument(f"--profile-directory={self.profile_path}")
+            self.chrome_options.add_argument(f"--profile-directory=Default")
+
         if remote_driver:
-            self.driver = webdriver.Remote(command_executor=f'http://{remote_address}:{remote_port}/wd/hub',options=self.chrome_options)
+            self.driver = webdriver.Remote(
+                command_executor=f'http://{remote_address}:{remote_port}',
+                options=self.chrome_options
+            )
         else:
             self.driver = webdriver.Chrome(service=ChromeDriverManager().install(), # type: ignore  # noqa: E501
-                                           options=self.chrome_options) 
-            
-        # Changing the property of the navigator value for webdriver to undefined 
-        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})") 
-        
+                                           options=self.chrome_options)
+
+        # Changing the property of the navigator value for webdriver to undefined
+        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
         self.driver.implicitly_wait(5)
 
     def find_elements(self,by, value, timeout=5):
@@ -79,7 +91,7 @@ class Browser:
         if len(elements) > 0:
             return elements[0]
         return None
-    
+
     def wait_for_element(self,by, element_id, timeout=5):
         '''wait for element to be clickable
             returns the element if found
@@ -91,9 +103,9 @@ class Browser:
         if ret is not None:
             return ret
         return None
-    
 
-                
+
+
     def close(self):
         if hasattr(self, 'driver'):
             try:
@@ -132,16 +144,24 @@ class Browser:
             buttons[0].click()
             return True
         return False
-    
+
     def send_keys(self,element_id,keys,clear_first = True):
         element = self.find_elements(By.XPATH, element_id,timeout=1)
         if element is None:
             return False
-        
+
         if clear_first:
             element.send_keys(Keys.CONTROL + "a")
-        
+
         element.send_keys(keys)
-        
+
         return True
-    
+
+    def _kill_chrome_processes(self):
+        """Kill any existing Chrome processes"""
+        if sys.platform == "darwin":  # macOS
+            try:
+                subprocess.run(['pkill', '-f', 'Chrome'], check=False)
+                time.sleep(1)  # Give processes time to close
+            except Exception as e:
+                print(f"Error killing Chrome processes: {e}")
